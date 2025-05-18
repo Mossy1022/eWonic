@@ -40,10 +40,12 @@ import {
     // Callbacks provided to start_session
     MessageCallback, ConnectionSuccessCallback, DisconnectionCallback,
     PeerFoundCallback, PeerLostCallback, cleanupManager,
+    updateCallbacks,
 } from '../services/p2p/connection_manager';
 
 // Config
 import { EWONIC_BLE_PREFIX } from '../config/ble_config';
+import { handle_incoming_audio_frame } from '../services/audio/audio_receiver';
 
 // --- Define a unified Peer Type for the UI ---
 interface DisplayPeer {
@@ -105,12 +107,14 @@ export default function LobbyScreen({ onPeerConnected }: { onPeerConnected?: (pe
 
     // Called by CM when a message is received
     const handle_incoming_message = useCallback((peerId: string, msg: string) => {
-        if (!isMountedRef.current) return;
         if (msg.startsWith('AUDIO:')) {
-            // Placeholder for handling incoming audio frames
-             logMessage(`Audio frame received from ${peerId.substring(0, 6)}`);
-            // handle_incoming_audio_frame(msg.substring(6)); // If using audio receiver
-        } else {
+            handle_incoming_audio_frame(msg.substring(6)).catch(err =>
+                console.error('[LobbyScreen] Error playing audio frame:', err)
+            );
+            if (isMountedRef.current) {
+                logMessage(`Audio frame received from ${peerId.substring(0, 6)}`);
+            }
+        } else if (isMountedRef.current) {
             logMessage(`Msg[${peerId.substring(0, 6)}]: ${msg}`);
         }
     }, [logMessage]);
@@ -256,6 +260,17 @@ export default function LobbyScreen({ onPeerConnected }: { onPeerConnected?: (pe
         });
         // If the lost peer was connected, the handle_disconnection callback should handle it.
     }, [logMessage]);
+
+    // Register callbacks with the Connection Manager so they remain active even if this screen unmounts
+    useEffect(() => {
+        updateCallbacks({
+            onMessage: handle_incoming_message,
+            onConnected: handle_connection_success,
+            onDisconnect: handle_disconnection,
+            onPeerFound: handle_peer_found,
+            onPeerLost: handle_peer_lost,
+        });
+    }, [handle_incoming_message, handle_connection_success, handle_disconnection, handle_peer_found, handle_peer_lost]);
 
      // --- Native BLE Event Handlers (Called by ble_advertise module) ---
      // Define these before handle_toggle_session which might depend on their state updates implicitly
