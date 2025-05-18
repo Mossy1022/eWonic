@@ -260,10 +260,11 @@ RCT_EXPORT_METHOD(initialize:(NSInteger)sampleRate
     RCTLogInfo(@"[EwonicAudioModule Native] Tap installed on input node.");
 
     @try {
-        if (!self.captureEngine.isPrepared) {
-            [self.captureEngine prepare];
-            RCTLogInfo(@"[EwonicAudioModule Native] Capture engine prepared.");
-        }
+        // AVAudioEngine does not expose an `isPrepared` property. Calling
+        // `prepare` multiple times is safe and ensures the engine has
+        // allocated the resources it needs before starting.
+        [self.captureEngine prepare];
+        RCTLogInfo(@"[EwonicAudioModule Native] Capture engine prepared.");
     } @catch (NSException *exception) {
         RCTLogError(@"[EwonicAudioModule Native] Exception preparing engine: %@. %@", exception.name, exception.reason);
         reject(@"INIT_ERROR_ENGINE_PREPARE", [NSString stringWithFormat:@"Exception preparing engine: %@",exception.reason], nil);
