@@ -144,9 +144,16 @@ RCT_EXPORT_METHOD(initialize:(NSInteger)sampleRate
     RCTLogInfo(@"[EwonicAudioModule Native] Initializing: Target SR=%ld, Tap BufSize=%ld frames, Target Ch=%ld, Target Depth=%ld",
                (long)sampleRate, (long)jsBufferSize, (long)channels, (long)bitDepth);
     if (!self.bridge || ![self.bridge isValid]) {
-        RCTLogError(@"[EwonicAudioModule Native] Cannot initialize: bridge invalid or nil.");
-        reject(@"INIT_ERROR_BRIDGE_INVALID", @"React Native bridge is not valid", nil);
-        return;
+        RCTLogWarn(@"[EwonicAudioModule Native] Bridge invalid on initialize. Attempting recovery...");
+        RCTBridge *recovered = [self findActiveBridge];
+        if (recovered && [recovered isValid]) {
+            self.bridge = recovered;
+            RCTLogInfo(@"[EwonicAudioModule Native] Recovered valid bridge during initialize.");
+        } else {
+            RCTLogError(@"[EwonicAudioModule Native] Cannot initialize: bridge invalid or nil.");
+            reject(@"INIT_ERROR_BRIDGE_INVALID", @"React Native bridge is not valid", nil);
+            return;
+        }
     }
     
     self.sampleRate = sampleRate;
@@ -295,9 +302,16 @@ RCT_EXPORT_METHOD(startCapture:(RCTPromiseResolveBlock)resolve
 {
     RCTLogInfo(@"[EwonicAudioModule Native] startCapture called by JS.");
     if (!self.bridge || ![self.bridge isValid]) {
-        RCTLogError(@"[EwonicAudioModule Native] Cannot start capture: bridge invalid or nil.");
-        reject(@"CAPTURE_ERROR_BRIDGE_INVALID", @"React Native bridge is not valid", nil);
-        return;
+        RCTLogWarn(@"[EwonicAudioModule Native] Bridge invalid on startCapture. Attempting recovery...");
+        RCTBridge *recovered = [self findActiveBridge];
+        if (recovered && [recovered isValid]) {
+            self.bridge = recovered;
+            RCTLogInfo(@"[EwonicAudioModule Native] Recovered valid bridge for capture.");
+        } else {
+            RCTLogError(@"[EwonicAudioModule Native] Cannot start capture: bridge invalid or nil.");
+            reject(@"CAPTURE_ERROR_BRIDGE_INVALID", @"React Native bridge is not valid", nil);
+            return;
+        }
     }
     if (!self.captureEngine) { reject(@"CAPTURE_ERROR_NO_ENGINE", @"CaptureEngine not initialized.", nil); return; }
     if (self.isRecording && self.captureEngine.isRunning) {
