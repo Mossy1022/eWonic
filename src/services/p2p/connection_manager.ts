@@ -43,6 +43,27 @@ let externalPeerFoundCallback: PeerFoundCallback | null = null
 let externalPeerLostCallback: PeerLostCallback | null = null
 
 ///////////////////////////////////////////////////////////////////////////////
+// Callback management
+///////////////////////////////////////////////////////////////////////////////
+export function updateCallbacks(params: {
+  onMessage?: MessageCallback | null
+  onConnected?: ConnectionSuccessCallback | null
+  onDisconnect?: DisconnectionCallback | null
+  onPeerFound?: PeerFoundCallback | null
+  onPeerLost?: PeerLostCallback | null
+}) {
+  if (params.onMessage !== undefined) externalMessageCallback = params.onMessage
+  if (params.onConnected !== undefined)
+    externalConnectSuccessCallback = params.onConnected
+  if (params.onDisconnect !== undefined)
+    externalDisconnectCallback = params.onDisconnect
+  if (params.onPeerFound !== undefined)
+    externalPeerFoundCallback = params.onPeerFound
+  if (params.onPeerLost !== undefined)
+    externalPeerLostCallback = params.onPeerLost
+}
+
+///////////////////////////////////////////////////////////////////////////////
 // Binary-audio helper (iOS raw binary -> MPC; Android falls back to base-64)
 ///////////////////////////////////////////////////////////////////////////////
 export async function send_binary_audio_frame(

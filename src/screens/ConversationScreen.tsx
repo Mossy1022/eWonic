@@ -12,11 +12,10 @@ import {
   // send_audio_frame, // This function in connection_manager sends text prefixed with "AUDIO:"
   send_binary_audio_frame, // Use this for iOS raw bytes, and connection_manager will handle Android b64
   cleanupManager as cleanupConnectionManager, // Renamed for clarity
+  updateCallbacks,
+  DisconnectionCallback,
 } from '../services/p2p/connection_manager';
-// The audio_receiver part is typically handled at a higher level or in the connection_manager
-// when messages arrive, not directly in ConversationScreen for outgoing audio.
-// However, if this screen also *plays* audio, you'd import from audio_receiver.
-// For now, assuming this screen is primarily for *sending* audio.
+import { handle_incoming_audio_frame } from '../services/audio/audio_receiver';
 
 import InCallManager from 'react-native-incall-manager';
 
@@ -60,6 +59,27 @@ export default function ConversationScreen({
       cleanupConnectionManager().catch(err => console.error("Error cleaning up connection manager:", err));
     };
   }, []); // Empty dependency array means this cleanup runs once on unmount
+
+  // Register callbacks to receive audio frames and handle disconnects
+  useEffect(() => {
+    const messageCb = (from: string, msg: string) => {
+      if (msg.startsWith('AUDIO:')) {
+        handle_incoming_audio_frame(msg.substring(6)).catch(err =>
+          console.error('[ConversationScreen] Error playing audio frame:', err),
+        );
+      }
+    };
+
+    const disconnectCb: DisconnectionCallback = (_peer, _reason) => {
+      if (onEndConversation) onEndConversation();
+    };
+
+    updateCallbacks({ onMessage: messageCb, onDisconnect: disconnectCb });
+
+    return () => {
+      updateCallbacks({ onMessage: null, onDisconnect: null });
+    };
+  }, [onEndConversation]);
 
   const handleStartStreaming = useCallback(async () => {
     if (isStreaming) return;
