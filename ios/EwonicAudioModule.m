@@ -226,6 +226,10 @@ RCT_EXPORT_METHOD(initialize:(NSInteger)sampleRate
                             RCTLogWarn(@"[TAP MAINQ DEBUG] Event NOT sent: mainQStrongSelf.bridge is NIL.");
                             return;
                         }
+                        if (![mainQStrongSelf.bridge isValid]) {
+                            RCTLogWarn(@"[TAP MAINQ DEBUG] Event NOT sent: mainQStrongSelf.bridge is NOT valid. Bridge description: %@", mainQStrongSelf.bridge);
+                            return;
+                        }
 
                         if (base64Data) {
                             // RCTLogInfo(@"[EwonicAudioModule Native Tap] SENDING onAudioData event (on main queue). Frames: %u, Base64Len: %lu", mainQStrongSelf.conversionOutputBuffer.frameLength, (unsigned long)base64Data.length);
