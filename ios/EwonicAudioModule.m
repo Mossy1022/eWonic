@@ -228,6 +228,8 @@ RCT_EXPORT_METHOD(initialize:(NSInteger)sampleRate
                         }
                         if (![mainQStrongSelf.bridge isValid]) {
                             RCTLogWarn(@"[TAP MAINQ DEBUG] Event NOT sent: mainQStrongSelf.bridge is NOT valid. Bridge description: %@", mainQStrongSelf.bridge);
+                            // If the bridge is no longer valid, stop capturing to avoid repeated warnings
+                            [mainQStrongSelf stopCaptureInternal];
                             return;
                         }
 
@@ -405,6 +407,21 @@ RCT_EXPORT_METHOD(cleanup:(RCTPromiseResolveBlock)resolve
     
     RCTLogInfo(@"[EwonicAudioModule Native] Cleanup method finished.");
     resolve(nil);
+}
+
+// Called when the React Native bridge is about to be invalidated
+- (void)invalidate
+{
+    RCTLogInfo(@"[EwonicAudioModule Native] Bridge invalidating. Stopping capture and cleaning resources.");
+    [self stopCaptureInternal];
+    if (self.inputNode) {
+        [self.inputNode removeTapOnBus:0];
+    }
+    if (self.captureEngine.isRunning) {
+        [self.captureEngine stop];
+    }
+    _audioConverter = nil;
+    _conversionOutputBuffer = nil;
 }
 
 // --- AVAudioPlayerDelegate Methods ---
