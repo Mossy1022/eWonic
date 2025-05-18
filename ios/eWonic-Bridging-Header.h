@@ -1,0 +1,4 @@
+
+// eWonic-Bridging-Header.h
+#import <React/RCTBridgeModule.h>
+#import <React/RCTEventEmitter.h> // Needed for sending events

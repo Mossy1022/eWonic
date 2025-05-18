@@ -1,0 +1,11 @@
+vendor/**
+node_modules/**
+.bundle/**
+__tests__/**
+ios/**
+android/**
+package-lock.json
+Gemfile.lock
+README.md
+.prettierrc.js
+.eslintrc.js

@@ -48,5 +48,26 @@
 	</array>
 	<key>UIViewControllerBasedStatusBarAppearance</key>
 	<false/>
+	<key>NSMicrophoneUsageDescription</key>
+	<string>This app requires access to the microphone for audio communication.</string>
+
+	<key>NSBluetoothAlwaysUsageDescription</key>
+	<string>This app uses Bluetooth to discover and connect to nearby devices.</string>
+<key>NSLocalNetworkUsageDescription</key>
+<string>eWonic uses the local network to discover and connect with nearby users for real-time translation.</string>
+	<key>NSBluetoothPeripheralUsageDescription</key>
+	<string>eWonic uses Bluetooth to connect to nearby users for local communication.</string>
+<key>NSBonjourServices</key>
+<array>
+    <string>_ewonic._tcp</string>
+    <string>_ewonic._udp</string> <!-- Add both TCP and UDP -->
+</array>
+	<key>NSLocationWhenInUseUsageDescription</key>
+	<string>eWonic uses your location to find nearby devices via Bluetooth.</string>
+	<key>UIBackgroundModes</key>
+	<array>
+		<string>bluetooth-central</string>
+		<string>bluetooth-peripheral</string> <!-- If you plan to advertise -->
+	</array>
 </dict>
 </plist>
