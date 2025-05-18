@@ -58,6 +58,21 @@ RCT_EXPORT_MODULE(); // Exports as "EwonicAudioModule"
     return @[@"onAudioData"];
 }
 
+// Attempt to find a currently active RCTBridge from the app's view hierarchy.
+- (RCTBridge *)findActiveBridge
+{
+    for (UIWindow *window in [UIApplication sharedApplication].windows) {
+        id rootVC = window.rootViewController;
+        if ([rootVC respondsToSelector:@selector(bridge)]) {
+            RCTBridge *possibleBridge = [rootVC performSelector:@selector(bridge)];
+            if (possibleBridge && [possibleBridge isValid]) {
+                return possibleBridge;
+            }
+        }
+    }
+    return nil;
+}
+
 - (void)dealloc {
     RCTLogInfo(@"[EwonicAudioModule Native] Deallocating: %@", self);
     if (self.isRecording) {
@@ -227,10 +242,17 @@ RCT_EXPORT_METHOD(initialize:(NSInteger)sampleRate
                             return;
                         }
 
-                        if (!mainQStrongSelf.bridge) {
-                            RCTLogWarn(@"[TAP MAINQ DEBUG] Event NOT sent: mainQStrongSelf.bridge is NIL.");
-                            return;
-                        }
+                        if (!mainQStrongSelf.bridge || ![mainQStrongSelf.bridge isValid]) {
+                            RCTLogWarn(@"[TAP MAINQ DEBUG] Bridge missing or invalid when sending event. Attempting recovery...");
+                            RCTBridge *recovered = [mainQStrongSelf findActiveBridge];
+                            if (recovered) {
+                                RCTLogInfo(@"[TAP MAINQ DEBUG] Acquired new bridge instance. Continuing event dispatch.");
+                                mainQStrongSelf.bridge = recovered;
+                            } else {
+                                RCTLogError(@"[TAP MAINQ DEBUG] Failed to recover a valid bridge. Stopping capture.");
+                                [mainQStrongSelf stopCaptureInternal];
+                                return;
+                            }
 
                         if (base64Data) {
                             // RCTLogInfo(@"[EwonicAudioModule Native Tap] SENDING onAudioData event (on main queue). Frames: %u, Base64Len: %lu", mainQStrongSelf.conversionOutputBuffer.frameLength, (unsigned long)base64Data.length);
