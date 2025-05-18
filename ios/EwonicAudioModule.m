@@ -46,7 +46,10 @@ RCT_EXPORT_MODULE(); // Exports as "EwonicAudioModule"
 
 + (BOOL)requiresMainQueueSetup
 {
-    return NO; // Good for performance, allows init on background thread
+    // The module works with AVAudioSession which expects interaction from
+    // the main thread. Initializing on the main queue prevents invalid bridge
+    // references when dispatching events.
+    return YES;
 }
 
 // This is crucial for RCTEventEmitter
@@ -221,19 +224,6 @@ RCT_EXPORT_METHOD(initialize:(NSInteger)sampleRate
 
                         if (!mainQStrongSelf.bridge) {
                             RCTLogWarn(@"[TAP MAINQ DEBUG] Event NOT sent: mainQStrongSelf.bridge is NIL.");
-                            return;
-                        }
-                        if (![mainQStrongSelf.bridge isValid]) {
-                            RCTLogWarn(@"[TAP MAINQ DEBUG] Event NOT sent: mainQStrongSelf.bridge is NOT valid. Bridge description: %@", [mainQStrongSelf.bridge description]);
-                            return;
-                        }
-                        NSString *modName = [[mainQStrongSelf class] moduleName];
-                        if (!modName || [modName length] == 0) {
-                            RCTLogWarn(@"[TAP MAINQ DEBUG] Event NOT sent: moduleName is NIL or empty for mainQStrongSelf.");
-                            return;
-                        }
-                        if (![mainQStrongSelf.bridge moduleIsInitialized:modName]) {
-                            RCTLogWarn(@"[TAP MAINQ DEBUG] Event NOT sent: Module '%@' is NOT initialized in bridge. Bridge: %@", modName, [mainQStrongSelf.bridge description]);
                             return;
                         }
 
