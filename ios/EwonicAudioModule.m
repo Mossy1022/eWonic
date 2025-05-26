@@ -249,17 +249,18 @@ RCT_EXPORT_METHOD(initialize:(NSInteger)sampleRate
                             return;
                         }
 
-                        if (!mainQStrongSelf.bridge || ![mainQStrongSelf.bridge isValid]) {
-                            RCTLogWarn(@"[TAP MAINQ DEBUG] Bridge missing or invalid when sending event. Attempting recovery...");
-                            RCTBridge *recovered = [mainQStrongSelf findActiveBridge];
-                            if (recovered) {
-                                RCTLogInfo(@"[TAP MAINQ DEBUG] Acquired new bridge instance. Continuing event dispatch.");
-                                mainQStrongSelf.bridge = recovered;
-                            } else {
-                                RCTLogError(@"[TAP MAINQ DEBUG] Failed to recover a valid bridge. Stopping capture.");
-                                [mainQStrongSelf stopCaptureInternal];
-                                return;
-                            }
+                      if (!mainQStrongSelf.bridge || ![mainQStrongSelf.bridge isValid]) {
+                        RCTLogWarn(@"[TAP MAINQ DEBUG] Bridge missing or invalid when sending event. Attempting recovery...");
+                        RCTBridge *recovered = [mainQStrongSelf findActiveBridge];
+                        if (recovered) {
+                          RCTLogInfo(@"[TAP MAINQ DEBUG] Acquired new bridge instance. Continuing event dispatch.");
+                          mainQStrongSelf.bridge = recovered;
+                        } else {
+                          RCTLogError(@"[TAP MAINQ DEBUG] Failed to recover a valid bridge. Stopping capture.");
+                          [mainQStrongSelf stopCaptureInternal];
+                          return;
+                        }
+                      }
 
                         if (base64Data) {
                             // RCTLogInfo(@"[EwonicAudioModule Native Tap] SENDING onAudioData event (on main queue). Frames: %u, Base64Len: %lu", mainQStrongSelf.conversionOutputBuffer.frameLength, (unsigned long)base64Data.length);
